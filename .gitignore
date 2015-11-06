@@ -1,0 +1,8 @@
+venv
+*.pyc
+*~
+site/*
+!site/assets
+!site/data
+site/data/*
+!site/data/.gitkeep
