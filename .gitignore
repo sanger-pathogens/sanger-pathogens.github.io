@@ -1,6 +1,7 @@
 venv
 *.pyc
 *~
+*.swp
 site/*
 !site/assets
 !site/data
