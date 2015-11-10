@@ -6,9 +6,13 @@ import requests
 import yaml
 
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import HTTPError
 from yaml.scanner import ScannerError
 
 class ConfigError(ValueError):
+  pass
+
+class GithubError(ValueError):
   pass
 
 def get_github_config():
@@ -57,7 +61,7 @@ def parse_time(t):
 def add_release_data(data, github_get):
   logger.info("Adding details of releases")
   for repo in data:
-    logger.debug("Adding release data to %s", data['name'])
+    logger.debug("Adding release data to %s", repo['name'])
     release_url = repo['releases_url'][:-5] # remove '{/id}' suffix
     release_data = github_get(release_url).json()
     repo['release_count'] = len(release_data)
@@ -86,11 +90,21 @@ def get_github_data(org_name, github_get):
   return data
 
 def create_http_getter(username=None, token=None):
-  if username is None or token is None:
-    return lambda url: requests.get(url)
-  else:
-    auth_token=HTTPBasicAuth(username, token)
-    return lambda url: requests.get(url, auth=auth_token)
+  def get(url):
+    if username is None or token is None:
+      response = requests.get(url)
+    else:
+      auth_token=HTTPBasicAuth(username, token)
+      response = requests.get(url, auth=auth_token)
+    try:
+      response.raise_for_status()
+      return response
+    except HTTPError as e:
+      if e.response.status_code == 403:
+        logger.exception("Not allowed to access %s; you're probably being rate limited" % url)
+      else:
+        raise
+  return get
 
 def decay(t, half_life, now=None):
   # decay(now() - timedelta(days=14), timedelta(days=7), now()) == 0.25
