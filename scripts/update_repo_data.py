@@ -51,6 +51,9 @@ def discard_some_data(data):
     return {key: repo[key] for key in keys_to_keep}
   return [data_to_keep(repo) for repo in data]
 
+def parse_time(t):
+  return datetime.datetime.strptime(t, '%Y-%m-%dT%H:%M:%SZ')
+
 def add_release_data(data, github_get):
   logger.info("Adding details of releases")
   for repo in data:
@@ -60,7 +63,7 @@ def add_release_data(data, github_get):
     repo['release_count'] = len(release_data)
     def by_publish_date(release):
       publication_date = release['published_at']
-      return datetime.datetime.strptime(publication_date, '%Y-%m-%dT%H:%M:%SZ')
+      return parse_time(publication_date)
     if repo['release_count'] > 0:
       latest_release = max(release_data, key=by_publish_date)
       repo['release_version'] = latest_release['tag_name']
@@ -88,6 +91,38 @@ def create_http_getter(username=None, token=None):
   else:
     auth_token=HTTPBasicAuth(username, token)
     return lambda url: requests.get(url, auth=auth_token)
+
+def decay(t, half_life, now=None):
+  # decay(now() - timedelta(days=14), timedelta(days=7), now()) == 0.25
+  if now is None:
+    now = datetime.datetime.now()
+  return math.e ** (-(now-t).total_seconds() * math.log(2) / half_life.total_seconds())
+
+def tend_to(count, half_count):
+  # tend_to(0, 1) == 0.0
+  # tend_to(1, 1) == 0.5
+  # tend_to(2, 1) == 0.75
+  # tend_to(3, 1) == 0.875
+  # tend_to(-1, 1) == 0.0
+  if count == None or count < 0:
+    return 0
+  return 1 - (math.e ** (-count * math.log(2) / half_count))
+
+def add_scores(data):
+  for repo in data:
+    score = 0
+    score += 1 if len(repo['description']) > 0 else 0
+    score += 1 if repo['homepage'] is not None else 0
+    pushed_at = parse_time(repo['pushed_at'])
+    score += 1 * decay(pushed_at, datetime.timedelta(days=7))
+    score += 1 * tend_to(repo['release_count'], 3)
+    try:
+      last_release = parse_time(repo['release_date'])
+      score += 1 * decay(last_release, datetime.timedelta(days=7))
+    except KeyError:
+      pass # No releases
+    score += 1 * tend_to(repo['stargazers_count'], 3)
+    repo['score'] = score
 
 logger = logging.getLogger('sanger_pathogens.update_repo_data')
 
