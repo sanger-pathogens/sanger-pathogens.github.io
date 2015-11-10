@@ -1,2 +1,4 @@
 ---
 github_organisation: sanger-pathogens
+username: <USERNAME>
+token: <API TOKEN OR PASSWORD IF YOU REALLY MUST>
