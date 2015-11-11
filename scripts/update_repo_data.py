@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 import datetime
+import json
 import logging
+import math
+import os
 import requests
 import yaml
 
@@ -131,7 +134,9 @@ def tend_to(count, half_count):
   return 1 - (math.e ** (-count * math.log(2) / half_count))
 
 def add_scores(data):
+  logging.info("Scoring repos")
   for repo in data:
+    logging.debug("Scoring '%s'" % repo['name'])
     score = 0
     score += 1 if len(repo['description']) > 0 else 0
     score += 1 if repo['homepage'] is not None else 0
@@ -152,15 +157,19 @@ def get_config_data():
   files = [os.path.join(config_dir, f) for f in os.listdir(config_dir) if
            os.path.isfile(os.path.join(config_dir, f))]
   config_files = {os.path.basename(f)[:-4]: f for f in files if f[-4:] == '.yml'}
+  logging.info("Loading config from %s files in '%s'" % (len(config_files),
+                                                         config_dir))
   config = []
   for name, file_path in config_files.items():
     with open(file_path, 'r') as config_file:
+      logging.debug("Loading config from '%s' (%s)" % (file_path, name))
       new_config = yaml.load(config_file)
       new_config['name'] = name
       config.append(new_config)
   return config
 
 def merge(repo_data, config_data):
+  logging.info("Merging data from Github and config files")
   repo_data = {repo['name']: repo for repo in repo_data}
   config_data = {config['name']: config for config in config_data}
   for name, repo in repo_data.items():
@@ -172,6 +181,15 @@ def merge(repo_data, config_data):
     multiplier = repo.get('score_multiplier', 1)
     repo['moderated_score'] = repo['score'] * multiplier
   return list(repo_data.values())
+
+def write_data(data):
+  parent_dir = os.path.dirname(script_directory())
+  data_path = os.path.join(parent_dir, 'site', 'data', 'all.json')
+  with open(data_path, 'w') as data_file:
+    logging.info("Writing details of %s repos to '%s'" % (len(data), data_path))
+    sorted_data = sorted(data, key=lambda r: r['score'], reverse=True)
+    json.dump({'data': sorted_data}, data_file, sort_keys=True,
+              indent=2, separators=(',', ': '))
 
 logger = logging.getLogger('sanger_pathogens.update_repo_data')
 
@@ -187,5 +205,5 @@ if __name__ == '__main__':
 
   config_data = get_config_data()
   
-  data = merge(repo_data, config_data)
+  data = merge(github_data, config_data)
   write_data(data)
