@@ -25,5 +25,15 @@ if __name__ == '__main__':
   env = Environment(loader=get_loader())
   index_template = env.get_template('index.html')
   index_path = os.path.join(site_dir(), 'index.html')
+  repos = [
+    {'name': 'foo', 'description': 'about foos'},
+    {'name': 'bar', 'description': 'about bars'},
+    {'name': 'baz', 'description': 'about bazs'}
+  ]
+  organisation_name = 'WTSI Pathogen Informatics'
+  collected_at = '???'
   with open(index_path, 'w') as index_file:
-    print(index_template.render(who='world!'), file=index_file)
+    print(index_template.render(repos=repos,
+                                organisation_name=organisation_name,
+                                collected_at=collected_at),
+          file=index_file)

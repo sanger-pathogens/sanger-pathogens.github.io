@@ -1,10 +1,40 @@
 <html>
 <head>
-  <title>Sanger Pathogens Repos</title>
+  <title>{{ organisation_name }} Repos</title>
   <link rel="stylesheet" href="assets/css/bootstrap.css">
   <link rel="stylesheet" href="assets/css/bootstrap-theme.css">
   <script src="assets/js/bootstrap.js"></script>
 </head>
 <body>
-  <h1>Hello {{ who }}</h1>
+  <div class="container">
+    <div class="row page-header">
+      <div class="col-md-12">
+        <h1>{{ organisation_name }}</h1>
+	<p>A list of our favorite repos</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <table class="table">
+          <thead>
+            <th>Repository</th>
+            <th>Description</th>
+          </thead>
+          <tbody>
+          {% for repo in repos %}
+            <tr>
+              <td>{{ repo['name'] }}</td>
+              <td>{{ repo['description'] }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <h4>Data collected: {{collected_at}}</h4>
+      </div>
+    </div>
+  </div>
 </body>
