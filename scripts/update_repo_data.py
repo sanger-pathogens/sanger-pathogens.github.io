@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import re
 import requests
 import yaml
 
@@ -50,7 +51,8 @@ def discard_some_data(data):
       'pushed_at',
       'stargazers_count',
       'releases_url',
-      'watchers_count'
+      'watchers_count',
+      'url'
     ]
     return {key: repo[key] for key in keys_to_keep}
   return [data_to_keep(repo) for repo in data]
@@ -137,6 +139,73 @@ def add_scores(data):
       pass # No releases
     score += 1 * tend_to(repo['stargazers_count'], 3)
     repo['score'] = score
+
+def inline_markdown_links(readme):
+  link_lookup = re.compile('^\s*\[([^\]]+)\]:\s*(\S+)\s*$', re.M)
+  link_details = {text: url for text, url in
+                  re.findall(link_lookup, readme)}
+  readme = re.sub(link_lookup, '', readme)
+  link_link_lookup = '\[([^]]+)\]\s*\[([^]]+)\]'
+  for text, link in re.findall(link_link_lookup, readme):
+    if link in link_details:
+      link_details[text] = link_details[link]
+  readme = re.sub(link_link_lookup, r'[\1]', readme)
+  for link_text, url in link_details.items():
+    readme = re.sub("\[%s\]" % link_text, "[%s](%s)" % (link_text, url), readme)
+  return readme
+
+def summarise_markdown(readme):
+  #logging.debug(">>>>>>>>>ORIGINAL:\n%s", readme[:1000])
+  # remove travis
+  readme = re.sub('\[!\[Build Status\]\(https://travis-ci.org/[^)]*\)\]\(https://travis-ci.org/[^)]*\)\n*',
+                  '', readme)
+  #logging.debug(">>>>>>>>>No TRAVIS:\n%s", readme[:1000])
+  # fix links
+  readme = inline_markdown_links(readme)
+  #logging.debug(">>>>>>>>>No empty:\n%s", readme[:1000])
+  # remove code snippets
+  readme = re.sub(re.compile('```.+```', re.S), '', readme) # multiline scripts
+  # remove empty lines
+  readme = re.sub(re.compile('\n+', re.M), '\n', readme)
+  #logging.debug(">>>>>>>>>No Code:\n%s", readme[:1000])
+  # remove a heading if it's the first thing in the readme
+  underlined_heading = '[^\n]+\n[=-]+\n?'
+  hash_heading = '#+\s*.+'
+  m = re.match('^' + underlined_heading, readme)
+  if m and m.start() == 0:
+    readme = re.sub('^' + underlined_heading, '', readme)
+  else:
+    m = re.match('^' + hash_heading + '$', readme)
+    if m and m.start() == 0:
+      readme = re.sub('^' + hash_heading + '$', '', readme)
+  #logging.debug(">>>>>>>>>First heading:\n%s", readme[:1000])
+  # Remove from the next heading thing
+  readme = re.sub(re.compile(underlined_heading + '.+', re.S), '', readme)
+  readme = re.sub(re.compile(hash_heading, re.S), '', readme)
+  #logging.debug(">>>>>>>>>Output:")
+  # remove empty lines
+  readme = re.sub(re.compile('^\n+', re.M), '', readme)
+  return readme
+
+def add_readmes(data, github_get):
+  logger.info("Adding Readme data")
+  for repo in data:
+    logger.debug("Adding Readme data for %s" % repo['name'])
+    readme_url = repo['url'] + '/readme'
+    try:
+      readme_data = github_get(readme_url).json()
+    except HTTPError as e:
+      if e.response.status_code == 404:
+        repo['readme_content'] = None
+        repo['readme_name'] = None
+        continue # doesn't have a readme
+      else:
+        raise
+    base64_content = readme_data['content'].replace('\n', '')
+    readme_content = base64.b64decode(base64_content).decode('utf8')
+    readme_name = readme_data['name']
+    repo['readme_content'] = readme_content
+    repo['readme_name'] = readme_name
 
 logger = logging.getLogger('sanger_pathogens.update_repo_data')
 
