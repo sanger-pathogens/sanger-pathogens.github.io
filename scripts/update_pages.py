@@ -1,21 +1,29 @@
 #!/usr/bin/env python3
 
+import json
 import logging
 import os
 
 from jinja2 import Environment, FileSystemLoader
 
-def get_loader():
+def parent_dir():
   script_dir = os.path.dirname(os.path.realpath(__file__))
-  parent_dir = os.path.dirname(script_dir)
-  templates_dir = os.path.join(parent_dir, 'templates')
+  return os.path.dirname(script_dir)
+
+def get_loader():
+  templates_dir = os.path.join(parent_dir(), 'templates')
   logger.debug("Loading templates from '%s'" % templates_dir)
   return FileSystemLoader(templates_dir)
 
 def site_dir():
-  script_dir = os.path.dirname(os.path.realpath(__file__))
-  parent_dir = os.path.dirname(script_dir)
-  return os.path.join(parent_dir, 'site')
+  return os.path.join(parent_dir(), 'site')
+
+def get_data():
+  data_path = os.path.join(site_dir(), 'data', 'all.json')
+  with open(data_path, 'r') as data_file:
+    logging.debug("Getting data from '%s'" % data_path)
+    data = json.load(data_file)
+  return data
 
 logger = logging.getLogger('sanger_pathogens.update_pages')
 
@@ -25,15 +33,14 @@ if __name__ == '__main__':
   env = Environment(loader=get_loader())
   index_template = env.get_template('index.html')
   index_path = os.path.join(site_dir(), 'index.html')
-  repos = [
-    {'name': 'foo', 'description': 'about foos'},
-    {'name': 'bar', 'description': 'about bars'},
-    {'name': 'baz', 'description': 'about bazs'}
-  ]
-  organisation_name = 'WTSI Pathogen Informatics'
-  collected_at = '???'
+  data = get_data()
+  repos = data['repos']
+  name = data['name']
+  organisation_name = data['organisation_name']
+  collected_at = data['collected_at']
   with open(index_path, 'w') as index_file:
     print(index_template.render(repos=repos,
+                                name=name,
                                 organisation_name=organisation_name,
                                 collected_at=collected_at),
           file=index_file)

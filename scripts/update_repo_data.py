@@ -24,22 +24,22 @@ def script_directory():
 
 def get_github_config():
   logger.info("Loading Github config")
+  config_keys = ['github_organisation', 'username', 'token', 'name']
   try:
     parent_dir = os.path.dirname(script_directory())
     config_file = os.path.join(parent_dir, 'config.yml')
     with open(config_file, 'r') as config_file:
       config = yaml.load(config_file)
     logger.info("Organisation is {github_organisation}, username is {username}".format(**config))
-    return {key: config[key] for key in ['github_organisation', 'username',
-                                          'token']}
+    return {key: config[key] for key in config_keys}
   except FileNotFoundError:
     raise ConfigError("Please make sure that \"%s\" exists" % config_file)
   except ScannerError as e:
     raise ConfigError("Please make sure that \"%s\" is valid Yaml: \n%s" %
                       (config_file, e))
   except (TypeError, KeyError):
-    raise ConfigError("Please make sure that \"%s\" contains your github_organisation, username and authentication token" %
-                     config_file)
+    raise ConfigError("Please make sure that \"%s\" contains the following:\n" %
+                     (config_file, '\n'.join(config_keys)))
 
 def deduplicate_github_data(data):
   # There's a small chance of duplication due
@@ -182,13 +182,19 @@ def merge(repo_data, config_data):
     repo['moderated_score'] = repo['score'] * multiplier
   return list(repo_data.values())
 
-def write_data(data):
+def write_data(organisation_name, name, repos):
   parent_dir = os.path.dirname(script_directory())
   data_path = os.path.join(parent_dir, 'site', 'data', 'all.json')
   with open(data_path, 'w') as data_file:
-    logging.info("Writing details of %s repos to '%s'" % (len(data), data_path))
-    sorted_data = sorted(data, key=lambda r: r['score'], reverse=True)
-    json.dump({'data': sorted_data}, data_file, sort_keys=True,
+    logging.info("Writing details of %s repos to '%s'" % (len(repos), data_path))
+    sorted_repos = sorted(repos, key=lambda r: r['score'], reverse=True)
+    data = {
+      'repos': sorted_repos,
+      'organisation_name': organisation_name,
+      'name': name,
+      'collected_at': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    }
+    json.dump(data, data_file, sort_keys=True,
               indent=2, separators=(',', ': '))
 
 logger = logging.getLogger('sanger_pathogens.update_repo_data')
@@ -205,5 +211,5 @@ if __name__ == '__main__':
 
   config_data = get_config_data()
   
-  data = merge(github_data, config_data)
-  write_data(data)
+  repos = merge(github_data, config_data)
+  write_data(github_config['github_organisation'], github_config['name'], repos)
