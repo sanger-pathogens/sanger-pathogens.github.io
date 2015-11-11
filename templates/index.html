@@ -3,6 +3,7 @@
   <title>{{ name }} Repos</title>
   <link rel="stylesheet" href="assets/css/bootstrap.css">
   <link rel="stylesheet" href="assets/css/bootstrap-theme.css">
+  <script src="assets/js/jquery-1.11.3.js"></script>
   <script src="assets/js/bootstrap.js"></script>
 </head>
 <body>
@@ -15,13 +16,35 @@
     </div>
     <div class="row">
       <div class="col-md-12">
+        <h2>Featured Repos</h2>
+      </div>
+    </div>
+    <div id="featured_repos" class="row">
+      {% for repo in featured_repos[:3] %}
+      <div class="col-md-4">
+        <h3>{{ repo['name'] }}</h3>
+	<p>{{ repo['description'] }}<p>
+	<p>Last Updated: <span class='date'>{{ repo['pushed_at'] }}</span></p>
+	{% if repo['release_version'] %}
+	<p>Latest Release: {{ repo['release_version'] }}</p>
+	{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        <h2>Other Repos</h2>
+      </div>
+    </div>
+    <div id="other_repos" class="row">
+      <div class="col-md-12">
         <table class="table">
           <thead>
             <th>Repository</th>
             <th>Description</th>
           </thead>
           <tbody>
-          {% for repo in repos %}
+          {% for repo in (featured_repos[3:] + other_repos)[:20] %}
             <tr>
               <td>{{ repo['name'] }}</td>
               <td>{{ repo['description'] }}</td>
@@ -33,8 +56,42 @@
     </div>
     <div class="row">
       <div class="col-md-12">
-        <h4>Data collected: {{collected_at}}</h4>
+        <p>Data collected: <span class='date'>{{collected_at}}</span></p>
       </div>
     </div>
+    <script>
+      $(document).ready(function() {
+	function timeDeltaString (millis) {
+          var seconds = millis / 1000;
+	  if (seconds < 120) {
+            return Math.round(seconds) + ' seconds ago';
+	  }
+	  var minutes = seconds / 60;
+	  if (minutes < 120) {
+            return Math.round(minutes) + ' minutes ago';
+	  }
+	  var hours = minutes / 60;
+	  if (hours < 48) {
+            return Math.round(hours) + ' hours ago';
+	  }
+	  var days = hours / 24;
+	  if (days < 28) {
+            return Math.round(days) + ' days ago';
+	  }
+	  var weeks = days / 7;
+	  if (weeks < 12) {
+            return Math.round(weeks) + ' weeks ago';
+	  }
+	  var months = weeks / 4;
+	  return Math.round(months) + ' months ago';
+        }
+        var now = new Date();
+        $( "span.date" ).each(function() {
+          var date_string = this.textContent;
+	  var date_obj = new Date(date_string);
+          this.textContent = timeDeltaString(now - date_obj);
+	});
+      });
+    </script>
   </div>
 </body>
