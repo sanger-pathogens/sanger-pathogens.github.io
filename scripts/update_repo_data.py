@@ -15,20 +15,28 @@ class ConfigError(ValueError):
 class GithubError(ValueError):
   pass
 
+def script_directory():
+  script_path = os.path.realpath(__file__)
+  return os.path.dirname(script_path)
+
 def get_github_config():
   logger.info("Loading Github config")
   try:
-    with open('config.yml', 'r') as config_file:
+    parent_dir = os.path.dirname(script_directory())
+    config_file = os.path.join(parent_dir, 'config.yml')
+    with open(config_file, 'r') as config_file:
       config = yaml.load(config_file)
     logger.info("Organisation is {github_organisation}, username is {username}".format(**config))
     return {key: config[key] for key in ['github_organisation', 'username',
                                           'token']}
   except FileNotFoundError:
-    raise ConfigError('Please make sure that "config.yml" exists')
+    raise ConfigError("Please make sure that \"%s\" exists" % config_file)
   except ScannerError as e:
-    raise ConfigError("Please make sure that \"config.yml\" is valid Yaml: \n%s" % e)
+    raise ConfigError("Please make sure that \"%s\" is valid Yaml: \n%s" %
+                      (config_file, e))
   except (TypeError, KeyError):
-    raise ConfigError('Please make sure that "config.yml" contains your github_organisation, username and authentication token')
+    raise ConfigError("Please make sure that \"%s\" contains your github_organisation, username and authentication token" %
+                     config_file)
 
 def deduplicate_github_data(data):
   # There's a small chance of duplication due
@@ -138,6 +146,33 @@ def add_scores(data):
     score += 1 * tend_to(repo['stargazers_count'], 3)
     repo['score'] = score
 
+def get_config_data():
+  parent_dir = os.path.dirname(script_directory())
+  config_dir = os.path.join(parent_dir, 'config')
+  files = [os.path.join(config_dir, f) for f in os.listdir(config_dir) if
+           os.path.isfile(os.path.join(config_dir, f))]
+  config_files = {os.path.basename(f)[:-4]: f for f in files if f[-4:] == '.yml'}
+  config = []
+  for name, file_path in config_files.items():
+    with open(file_path, 'r') as config_file:
+      new_config = yaml.load(config_file)
+      new_config['name'] = name
+      config.append(new_config)
+  return config
+
+def merge(repo_data, config_data):
+  repo_data = {repo['name']: repo for repo in repo_data}
+  config_data = {config['name']: config for config in config_data}
+  for name, repo in repo_data.items():
+    repo.update(config_data.get(name, {}))
+  for name, repo in config_data.items():
+    if name not in repo_data:
+      repo_data[name] = repo
+  for repo in repo_data.values():
+    multiplier = repo.get('score_multiplier', 1)
+    repo['moderated_score'] = repo['score'] * multiplier
+  return list(repo_data.values())
+
 logger = logging.getLogger('sanger_pathogens.update_repo_data')
 
 if __name__ == '__main__':
@@ -149,7 +184,6 @@ if __name__ == '__main__':
                                   github_config['token'])
   github_data = get_github_data(github_config['github_organisation'], github_get)
   add_scores(github_data)
-  add_readmes(github_data[:3])
 
   config_data = get_config_data()
   
