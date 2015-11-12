@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import datetime
 import json
 import logging
@@ -9,7 +10,7 @@ import requests
 import yaml
 
 from requests.auth import HTTPBasicAuth
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectionError
 from yaml.scanner import ScannerError
 
 class ConfigError(ValueError):
@@ -21,6 +22,10 @@ class GithubError(ValueError):
 def script_directory():
   script_path = os.path.realpath(__file__)
   return os.path.dirname(script_path)
+
+def data_path():
+  parent_dir = os.path.dirname(script_directory())
+  return os.path.join(parent_dir, 'site', 'data', 'all.json')
 
 def get_github_config():
   logger.info("Loading Github config")
@@ -102,12 +107,12 @@ def get_github_data(org_name, github_get):
 
 def create_http_getter(username=None, token=None):
   def get(url):
-    if username is None or token is None:
-      response = requests.get(url)
-    else:
-      auth_token=HTTPBasicAuth(username, token)
-      response = requests.get(url, auth=auth_token)
     try:
+      if username is None or token is None:
+        response = requests.get(url)
+      else:
+        auth_token=HTTPBasicAuth(username, token)
+        response = requests.get(url, auth=auth_token)
       response.raise_for_status()
       return response
     except HTTPError as e:
@@ -115,6 +120,10 @@ def create_http_getter(username=None, token=None):
         logger.exception("Not allowed to access %s; you're probably being rate limited" % url)
       else:
         raise
+    except ConnectionError:
+      logger.error("There was a problem accessing %s.  Are you online?",
+                    url)
+      raise
   return get
 
 def decay(t, half_life, now=None):
@@ -188,10 +197,9 @@ def merge(repo_data, config_data):
   return list(repo_data.values())
 
 def write_data(organisation_name, name, repos):
-  parent_dir = os.path.dirname(script_directory())
-  data_path = os.path.join(parent_dir, 'site', 'data', 'all.json')
-  with open(data_path, 'w') as data_file:
-    logging.info("Writing details of %s repos to '%s'" % (len(repos), data_path))
+  with open(data_path(), 'w') as data_file:
+    logging.info("Writing details of %s repos to '%s'" % (len(repos),
+                                                          data_path()))
     sorted_repos = sorted(repos, key=lambda r: r['score'], reverse=True)
     data = {
       'repos': sorted_repos,
@@ -205,15 +213,24 @@ def write_data(organisation_name, name, repos):
 logger = logging.getLogger('sanger_pathogens.update_repo_data')
 
 if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-l', '--local', action='store_true', default=False,
+                      help="Don't query Github, just merge existing data and config")
+  args = parser.parse_args()
   logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s",
                       level=logging.DEBUG)
 
   github_config = get_github_config()
-  github_get = create_http_getter(github_config['username'],
-                                  github_config['token'])
-  github_data = get_github_data(github_config['github_organisation'], github_get)
-  add_scores(github_data)
+  if args.local:
+    with open(data_path(), 'r') as data_file:
+      logger.info("Reloading data from %s", data_path())
+      github_data = json.load(data_file)['repos']
+  else:
+    github_get = create_http_getter(github_config['username'],
+                                    github_config['token'])
+    github_data = get_github_data(github_config['github_organisation'], github_get)
 
+  add_scores(github_data)
   config_data = get_config_data()
   
   repos = merge(github_data, config_data)
