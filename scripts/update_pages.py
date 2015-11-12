@@ -38,13 +38,11 @@ if __name__ == '__main__':
   repos = sorted(repos, key=lambda r: r['moderated_score'], reverse=True)
   featured_repos = repos[:3]
   other_repos = repos[3:]
-  name = data['name']
   organisation_name = data['organisation_name']
   collected_at = data['collected_at']
   with open(index_path, 'w') as index_file:
     print(index_template.render(featured_repos=featured_repos,
                                 other_repos=other_repos,
-                                name=name,
                                 organisation_name=organisation_name,
                                 collected_at=collected_at),
           file=index_file)

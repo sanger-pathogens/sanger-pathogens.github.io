@@ -10,15 +10,13 @@
 <body>
   <div class="container">
     <div class="row page-header">
-      <div class="media">
-        <div class="media-left">
+      <div class="col-md-4">
 	  <img alt="Wellcome Trust Sanger Institute Logo" width=300 src="assets/img/logo.png">
 	</div>
-	<div class="media-body">
+	<div class="col-md-8">
 	  <h2 class="media-heading">Wellcome Trust Sanger Institute<br>Pathogen Informatics</h2>
 	  <p>A list of our favorite repos from <a href="https://www.github.com/{{ organisation_name }}">Pathogen Informatics</a></p>
 	</div>
-      </div>
     </div>
     <div class="row">
       <div class="col-md-12">
@@ -32,9 +30,9 @@
           <div class="panel-heading"><a href="{{ repo['html_url'] }}"><h4>{{ repo['name'] }}</h4></a></div>
 	  <div class="panel-body">{{ repo['description'] }}</div>
 	  <div class="panel-footer">
-	    <p>Last Updated: <span class='date'>{{ repo['pushed_at'] }}</span>
+	    Last Updated: <span class='date'>{{ repo['pushed_at'] }}</span>
 	    {% if repo['release_version'] %}
-	    <br>Latest Release: {{ repo['release_version'] }}</p>
+	    <br>Latest Release: {{ repo['release_version'] }}
 	    {% endif %}
           </div>
         </div>
