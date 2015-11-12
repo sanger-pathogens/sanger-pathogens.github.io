@@ -35,7 +35,7 @@ if __name__ == '__main__':
   index_path = os.path.join(site_dir(), 'index.html')
   data = get_data()
   repos = data['repos']
-  repos = sorted(repos, key=lambda r: r['score'], reverse=True)
+  repos = sorted(repos, key=lambda r: r['moderated_score'], reverse=True)
   featured_repos = repos[:3]
   other_repos = repos[3:]
   name = data['name']

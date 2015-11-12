@@ -177,9 +177,14 @@ def merge(repo_data, config_data):
   for name, repo in config_data.items():
     if name not in repo_data:
       repo_data[name] = repo
-  for repo in repo_data.values():
+  for name, repo in repo_data.items():
     multiplier = repo.get('score_multiplier', 1)
-    repo['moderated_score'] = repo['score'] * multiplier
+    try:
+      score = repo['score']
+    except KeyError:
+      logging.warning("Problem calculating score for %s. Maybe you need to update your config?  Setting it to zero", name)
+      score = 0
+    repo['moderated_score'] = score * multiplier
   return list(repo_data.values())
 
 def write_data(organisation_name, name, repos):
