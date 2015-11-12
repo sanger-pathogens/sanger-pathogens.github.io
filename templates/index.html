@@ -27,7 +27,7 @@
       {% for repo in featured_repos[:3] %}
       <div class="col-md-4">
         <div class="panel panel-default">
-          <div class="panel-heading"><a href="{{ repo['html_url'] }}"><h4>{{ repo['name'] }}</h4></a></div>
+          <div class="panel-heading"><a href="{{ repo['homepage'] or repo['html_url'] }}"><h4>{{ repo['name'] }}</h4></a></div>
 	  <div class="panel-body">{{ repo['description'] }}</div>
 	  <div class="panel-footer">
 	    Last Updated: <span class='date'>{{ repo['pushed_at'] }}</span>
@@ -55,7 +55,7 @@
           <tbody>
           {% for repo in (featured_repos[3:] + other_repos) %}
             <tr>
-              <td><a href="{{ repo['html_url'] }}">{{ repo['name'] }}</a></td>
+              <td><a href="{{ repo['homepage'] or repo['html_url'] }}">{{ repo['name'] }}</a></td>
               <td>{{ repo['description'] }}</td>
 	      <td>{{ repo['moderated_score'] | round(3) }}</td>
             </tr>
