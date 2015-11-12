@@ -2,7 +2,6 @@
 <head>
   <title>{{ name }} Repos</title>
   <link rel="stylesheet" href="assets/css/bootstrap.css">
-  <link rel="stylesheet" href="assets/css/bootstrap-theme.css">
   <link rel="stylesheet" href="assets/css/datatables.css">
   <script src="assets/js/jquery-1.11.3.js"></script>
   <script src="assets/js/bootstrap.js"></script>
@@ -24,12 +23,16 @@
     <div id="featured_repos" class="row">
       {% for repo in featured_repos[:3] %}
       <div class="col-md-4">
-        <h3>{{ repo['name'] }}</h3>
-	<p>{{ repo['description'] }}<p>
-	<p>Last Updated: <span class='date'>{{ repo['pushed_at'] }}</span></p>
-	{% if repo['release_version'] %}
-	<p>Latest Release: {{ repo['release_version'] }}</p>
-	{% endif %}
+        <div class="panel panel-default">
+          <div class="panel-heading"><a href="{{ repo['html_url'] }}"><h4>{{ repo['name'] }}</h4></a></div>
+	  <div class="panel-body">{{ repo['description'] }}</div>
+	  <div class="panel-footer">
+	    <p>Last Updated: <span class='date'>{{ repo['pushed_at'] }}</span></p>
+	    {% if repo['release_version'] %}
+	    <p>Latest Release: {{ repo['release_version'] }}</p>
+	    {% endif %}
+          </div>
+        </div>
       </div>
       {% endfor %}
     </div>
@@ -49,7 +52,7 @@
           <tbody>
           {% for repo in (featured_repos[3:] + other_repos) %}
             <tr>
-              <td>{{ repo['name'] }}</td>
+              <td><a href="{{ repo['html_url'] }}">{{ repo['name'] }}</a></td>
               <td>{{ repo['description'] }}</td>
 	      <td>{{ repo['moderated_score'] | round(3) }}</td>
             </tr>
