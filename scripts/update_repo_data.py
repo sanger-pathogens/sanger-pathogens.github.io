@@ -150,11 +150,11 @@ def add_scores(data):
     score += 1 if len(repo['description']) > 0 else 0
     score += 1 if repo['homepage'] is not None else 0
     pushed_at = parse_time(repo['pushed_at'])
-    score += 1 * decay(pushed_at, datetime.timedelta(days=7))
+    score += 1 * decay(pushed_at, datetime.timedelta(days=28))
     score += 1 * tend_to(repo['release_count'], 3)
     try:
       last_release = parse_time(repo['release_date'])
-      score += 1 * decay(last_release, datetime.timedelta(days=7))
+      score += 1 * decay(last_release, datetime.timedelta(days=28))
     except KeyError:
       pass # No releases
     score += 1 * tend_to(repo['stargazers_count'], 3)
