@@ -118,8 +118,7 @@ def create_http_getter(username=None, token=None):
     except HTTPError as e:
       if e.response.status_code == 403:
         logger.exception("Not allowed to access %s; you're probably being rate limited" % url)
-      else:
-        raise
+      raise
     except ConnectionError:
       logger.error("There was a problem accessing %s.  Are you online?",
                     url)
