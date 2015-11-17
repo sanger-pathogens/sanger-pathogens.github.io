@@ -68,6 +68,9 @@ Other teams probably just need to use [blind_update.sh](scripts/blind_update.sh)
 - force push to master (danger!) `git push -f origin master`
 - rename the repo to `<your-org-name-here>.github.io`
 
+NB Your pages won't be available after you fork; you need to actually push some changes
+to `master` before they're browsable.
+
 ## Licences
 
 - The scripts, config and templates are licenced under [GPLv3](licences/GPL-LICENCE)
