@@ -17,12 +17,12 @@ cleanUp() {
   fi
 }
 
+root_dir=$(cd $(dirname ${BASH_SOURCE}[0]) && cd .. && pwd)
+cd $root_dir
 remote_repo_url=$(git remote -v | awk '$1 == "origin" && $3 ~ /fetch/ {print $2}')
 logecho "Remote repo is \"$remote_repo_url\""
 
 logecho "Creating temporary copy of the remote repo"
-root_dir=$(cd $(dirname ${BASH_SOURCE}[0]) && cd .. && pwd)
-cd $root_dir
 trap cleanUp EXIT
 git clone --branch master --no-checkout $remote_repo_url tmp_repo
 cp -r site/* tmp_repo

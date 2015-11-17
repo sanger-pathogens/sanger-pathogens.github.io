@@ -217,6 +217,7 @@ if __name__ == '__main__':
   args = parser.parse_args()
   logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s",
                       level=logging.DEBUG)
+  logging.getLogger("requests").setLevel(logging.WARNING)
 
   github_config = get_github_config()
   if args.local:
