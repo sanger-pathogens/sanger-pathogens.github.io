@@ -23,11 +23,17 @@ publishes it to github.io.
 
 ## Things to change (not for sanger-pathogens)
 
-- [the config](config.yml)
-- [default config](config/)
-- [the template](templates/index.html)
-- [the logo](site/assets/img/logo.png)
-- [the favicon](site/favicon.ico)
+- fork the repo
+- clone and checkout the code branch `git clone --branch code <URL>`
+- Update the following files:
+  - [the config](config.yml)
+  - [default config](config/)
+  - [the template](templates/index.html)
+  - [the logo](site/assets/img/logo.png)
+  - [the favicon](site/favicon.ico)
+- delete the master branch `git branch -D master`
+- create a new master branch `git subtree split --prefix site -b master`
+- force push to master (danger!) `git push -f origin master`
 
 ## Licences
 
