@@ -27,7 +27,7 @@ trap cleanUp EXIT
 git clone --branch master --no-checkout $remote_repo_url tmp_repo
 cp -r site/* tmp_repo
 cd tmp_repo
-git reset HEAD .
+git reset HEAD . || True
 
 logecho "Staging local changes"
 for modified_file in $(git status --porcelain | awk '$1 == "M" {print $2}'); do
