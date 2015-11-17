@@ -3,6 +3,29 @@
 Creates a summary of an organisation's Github repos and
 publishes it to github.io.
 
+## Introduction
+
+Github Pages serves static content from the `master` branch of
+`<your-org-name>/<your-org-name>.github.io` on `https://<your-org-name>.github.io`.
+In our case, this is [https://sanger-pathogens.github.io](https://sanger-pathogens.github.io).
+
+Because `master` is served to the world, development in this repo is done on the `code` branch.
+
+`update_repo_data.py` queries the Github API to get the latest data and 'score'
+each repo; this data is [stored in json](site/data/all.json).
+`update_pages.py` parses this data and uses a [template](templates/index.html) to
+create a [static html page](site/index.html).
+`serve_local.py` can be used to serve a copy locally on port 8080.
+`deploy.sh` takes your local changes in the `site/` directory, copies the contents
+into a temporary copy of the `master` branch and then pushes them to the `master`
+branch on Github.
+
+You need to provide a username and api token to get the data from Github.  This is
+entered in [config.yml](config.yml).  If you're automating daily updates (via cron)
+then you probably also want to use an SSH key for Github.  It's probably worth setting
+up a repo specific [deploy key](https://developer.github.com/guides/managing-deploy-keys/#deploy-keys)
+to reduce the impact if your key is compromised.
+
 ## Usage (by sanger-pathogens)
 
 - clone this repo
@@ -10,7 +33,7 @@ publishes it to github.io.
 - update [config.yml](config.yml)
 - Run `update_repo_data.py` to download the latest data
 - Run `update_pages.py` to update the html		
-- Run `serve_local.py` to check your updates
+- Run `serve_local.py` to check your updates (see http://localhost:8080)
 - Run `deploy.sh` to deploy your changes to github.io
 
 ## Automated usage (by sanger-pathogens)
@@ -18,8 +41,13 @@ publishes it to github.io.
 - clone the repo using SSH onto a server
 - create a [personal access token](https://github.com/settings/tokens)
 - update [config.yml](config.yml)
-- create a [deploy key](settings/keys) and install it on the server (without a password)
+- create a [deploy key](https://developer.github.com/guides/managing-deploy-keys/#deploy-keys) and install it on the server (without a password)
 - create a cron job to run [blind_update.sh](./scripts/blind_update.sh)
+
+Because we're automatically making a pushing commits, I've made it so that these scripts will
+only delete and modify files already known to Github to reduce the risk of a sensitive file
+being distributed to the world.  If you want to start serving a new file, you will need to
+manually push it to the `master` branch on the first occasion.
 
 ## Things to change (not for sanger-pathogens)
 
@@ -34,6 +62,7 @@ publishes it to github.io.
 - delete the master branch `git branch -D master`
 - create a new master branch `git subtree split --prefix site -b master`
 - force push to master (danger!) `git push -f origin master`
+- rename the repo to `<your-org-name-here>.github.io`
 
 ## Licences
 
