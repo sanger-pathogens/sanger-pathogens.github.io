@@ -13,25 +13,34 @@ set -eu
 # Sorry :(
 
 logecho() {
-  echo "[$(date "+%F %T")] INFO: $@"
+  echo "[$(date "+%F %T")] INFO: $@" >> "$error_log"
 }
 
 cleanUp() {
   logecho "Cleaning up temporary directories"
   rm -rf "$tmp_checkout_dir" || True
+  rm $error_log || True
 }
 
+onError() {
+  cat "$error_log" 1>&2 || True
+  cleanUp
+  exit 1
+}
+
+error_log=$(mktemp -t tmp_sanger-pathogens.github.io_error.log)
 tmp_checkout_dir=$(mktemp -d -t tmp_sanger-pathogens.github.io)
-trap cleanUp EXIT
+trap onError EXIT
 
 root_dir=$(cd $(dirname ${BASH_SOURCE}[0]) && cd .. && pwd)
 cd $root_dir
 remote_repo_url=$(git remote -v | awk '$1 == "origin" && $3 ~ /fetch/ {print $2}')
 
 logecho "Cloning $remote_repo_url into $tmp_checkout_dir"
-git clone --branch code $remote_repo_url $tmp_checkout_dir
+git clone --branch code $remote_repo_url $tmp_checkout_dir >> "$error_log" 2>&1
 cp "$root_dir/config.yml" "$tmp_checkout_dir/config.yml"
 cd $tmp_checkout_dir
-./scripts/blind_update.sh
+./scripts/blind_update.sh >> "$error_log" 2>&1
 
-trap - EXIT && cleanUp
+cleanUp
+trap - EXIT
