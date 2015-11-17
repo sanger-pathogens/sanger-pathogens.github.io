@@ -28,8 +28,8 @@ onError() {
   exit 1
 }
 
-error_log=$(mktemp -t tmp_sanger-pathogens.github.io_error.log)
-tmp_checkout_dir=$(mktemp -d -t tmp_sanger-pathogens.github.io)
+error_log=$(mktemp -t tmp_sanger-pathogens.github.io_error.log.XXXXX)
+tmp_checkout_dir=$(mktemp -d -t tmp_sanger-pathogens.github.io.XXXXX)
 trap onError EXIT
 
 root_dir=$(cd $(dirname ${BASH_SOURCE}[0]) && cd .. && pwd)
