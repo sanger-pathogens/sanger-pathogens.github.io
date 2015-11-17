@@ -42,12 +42,16 @@ to reduce the impact if your key is compromised.
 - create a [personal access token](https://github.com/settings/tokens)
 - update [config.yml](config.yml)
 - create a [deploy key](https://developer.github.com/guides/managing-deploy-keys/#deploy-keys) and install it on the server (without a password)
-- create a cron job to run [blind_update.sh](./scripts/blind_update.sh)
+- create a cron job to run [cronrun.sh](./scripts/cronrun.sh)
 
-Because we're automatically making a pushing commits, I've made it so that these scripts will
+Because we're automatically making and pushing commits, I've made it so that these scripts will
 only delete and modify files already known to Github to reduce the risk of a sensitive file
 being distributed to the world.  If you want to start serving a new file, you will need to
 manually push it to the `master` branch on the first occasion.
+
+`cronrun.sh` is a script we need to use because of potential file permissions incompatibility
+between the user we run the cron job with and the location our software is installed in.
+Other teams probably just need to use [blind_update.sh](scripts/blind_update.sh) instead.
 
 ## Things to change (not for sanger-pathogens)
 
