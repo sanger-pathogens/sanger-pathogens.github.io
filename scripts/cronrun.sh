@@ -18,12 +18,12 @@ logecho() {
 
 cleanUp() {
   logecho "Cleaning up temporary directories"
-  rm -rf "$tmp_checkout_dir" || True
-  rm $error_log || True
+  rm -rf "$tmp_checkout_dir" || true
+  rm $error_log || true
 }
 
 onError() {
-  cat "$error_log" 1>&2 || True
+  cat "$error_log" 1>&2 || true
   cleanUp
   exit 1
 }
