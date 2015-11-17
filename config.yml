@@ -1,5 +1,4 @@
 ---
 github_organisation: sanger-pathogens
-name: Wellcome Trust Sanger Institute Pathogen Informatics
 username: <USERNAME>
 token: <API TOKEN OR PASSWORD IF YOU REALLY MUST>

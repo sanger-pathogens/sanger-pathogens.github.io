@@ -29,7 +29,7 @@ def data_path():
 
 def get_github_config():
   logger.info("Loading Github config")
-  config_keys = ['github_organisation', 'username', 'token', 'name']
+  config_keys = ['github_organisation', 'username', 'token']
   try:
     parent_dir = os.path.dirname(script_directory())
     config_file = os.path.join(parent_dir, 'config.yml')
@@ -195,7 +195,7 @@ def merge(repo_data, config_data):
     repo['moderated_score'] = score * multiplier
   return list(repo_data.values())
 
-def write_data(organisation_name, name, repos):
+def write_data(organisation_name, repos):
   with open(data_path(), 'w') as data_file:
     logging.info("Writing details of %s repos to '%s'" % (len(repos),
                                                           data_path()))
@@ -203,7 +203,6 @@ def write_data(organisation_name, name, repos):
     data = {
       'repos': sorted_repos,
       'organisation_name': organisation_name,
-      'name': name,
       'collected_at': datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
     }
     json.dump(data, data_file, sort_keys=True,
@@ -233,4 +232,4 @@ if __name__ == '__main__':
   config_data = get_config_data()
   
   repos = merge(github_data, config_data)
-  write_data(github_config['github_organisation'], github_config['name'], repos)
+  write_data(github_config['github_organisation'], repos)
