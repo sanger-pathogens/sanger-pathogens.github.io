@@ -2,3 +2,10 @@ venv
 *.pyc
 *~
 *.swp
+*.swo
+site/*
+!site/favicon.ico
+!site/assets
+!site/data
+site/data/*
+!site/data/.gitkeep
