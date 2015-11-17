@@ -11,9 +11,9 @@ logecho() {
 
 cleanUp() {
   logecho "Error! cleaning up before exiting"
-  if [ -e "$original_dir/tmp_repo" ]; then
-    rm -rf "$original_dir/last_failure__tmp_repo" || True
-    mv "$original_dir/tmp_repo" "$original_dir/last_failure__tmp_repo"
+  if [ -e "$root_dir/tmp_repo" ]; then
+    rm -rf "$root_dir/last_failure__tmp_repo" || True
+    mv "$root_dir/tmp_repo" "$root_dir/last_failure__tmp_repo"
   fi
 }
 
@@ -21,10 +21,9 @@ remote_repo_url=$(git remote -v | awk '$1 == "origin" && $3 ~ /fetch/ {print $2}
 logecho "Remote repo is \"$remote_repo_url\""
 
 logecho "Creating temporary copy of the remote repo"
-original_dir=$(pwd)
-
+root_dir=$(cd $(dirname ${BASH_SOURCE}[0]) && cd .. && pwd)
+cd $root_dir
 trap cleanUp EXIT
-
 git clone --branch master --no-checkout $remote_repo_url tmp_repo
 cp -r site/* tmp_repo
 cd tmp_repo
@@ -56,6 +55,6 @@ git commit -m "Automatic Update: $(date)"
 git push origin master
 
 logecho "Tidying up"
-cd $original_dir
+cd $root_dir
 rm -rf tmp_repo
 trap - EXIT # Don't want to try cleanUp when we exit happily
