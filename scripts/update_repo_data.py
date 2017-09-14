@@ -146,7 +146,7 @@ def add_scores(data):
   for repo in data:
     logging.debug("Scoring '%s'" % repo['name'])
     score = 0
-    score += 1 if len(repo['description']) > 0 else 0
+    score += 1 if repo['description'] is not None else 0
     score += 1 if repo['homepage'] is not None else 0
     pushed_at = parse_time(repo['pushed_at'])
     score += 1 * decay(pushed_at, datetime.timedelta(days=28))
