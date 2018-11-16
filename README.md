@@ -9,7 +9,7 @@ publishes it to github.io.
   * [Usage (for sanger\-pathogens)](#usage-for-sanger-pathogens)
   * [Automated usage (for sanger\-pathogens)](#automated-usage-for-sanger-pathogens)
   * [Things to change (not for sanger\-pathogens)](#things-to-change-not-for-sanger-pathogens)
-  * [Licence](#licence)
+  * [License](#license)
   * [Feedback/Issues](#feedbackissues)
 
 ## Introduction
