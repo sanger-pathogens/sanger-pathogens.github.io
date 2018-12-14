@@ -23,7 +23,7 @@ Because `master` is served to the world, development in this repo is done on the
 
 `update_repo_data.py` queries the Github API to get the latest data and 'score' each repo; this data is [stored in json](site/data/all.json).   
 `update_pages.py` parses this data and uses a [template](templates/index.html) to create a [static html page](site/index.html).   
-`serve_local.py` can be used to serve a copy locally on port 8080.   
+`serve_local.sh` can be used to serve a copy locally on port 8080.   
 `deploy.sh` takes your local changes in the `site/` directory, copies the contents into a temporary copy of the `master` branch and then pushes them to the `master` branch on Github.   
 
 You need to provide a username and api token to get the data from Github. This is entered in [config.yml](config.yml). If you're automating daily updates (via cron) then you probably also want to use an SSH key for Github. It's probably worth setting up a repo specific [deploy key](https://developer.github.com/guides/managing-deploy-keys/#deploy-keys) to reduce the impact if your key is compromised.   
